@@ -1,0 +1,33 @@
+.container{
+    width: 100%;
+}
+
+.top{
+    float: left;
+    width: 100%;
+    height: 50px;
+    background-color: #428bca;
+}
+
+.center{
+    float: left;
+    width: 100%;
+    height: 550px;
+    background-color: white;
+}
+
+.bottom{
+    float: left;
+    width: 100%;
+    height: 50px;
+    background-color: white;
+    display: flex;
+    flex-direction: row;
+}
+
+.bottom-span{
+    width: 180px;
+    height: 30px;
+    margin-top: 10px;
+    margin-left: 15px;
+}
