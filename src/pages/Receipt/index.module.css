@@ -1,0 +1,40 @@
+.container{
+    width: 100%;
+    border: 1px solid black;
+}
+
+.top{
+    float: left;
+    width: 100%;
+    height: 50px;
+    background-color: gray;
+}
+
+.center{
+    float: left;
+    width: 100%;
+    height: 400px;
+    background-color: white;
+    overflow: auto;
+}
+
+.bottom{
+    float: left;
+    width: 100%;
+    height: 50px;
+    background-color: white;
+    display: flex;
+    flex-direction: row;
+}
+
+.chartCard{
+    float: left;
+    margin-top: 30px;
+    margin-left: 2%;
+    width: 96%;
+    height: 130px;
+    -webkit-box-shadow:3px 3px 3px 3px gray;;
+    -moz-box-shadow:3px 3px 3px 3px gray;;
+    box-shadow:3px 3px 3px 3px gray;
+    overflow: hidden;
+}

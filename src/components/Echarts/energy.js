@@ -18,41 +18,73 @@ import ReactEcharts from 'echarts-for-react';
 export default class EnergyChart extends React.Component{
     getOption =()=> {
         let option = {
-            title: {
-              text: ''
-            },
-            legend: {
-              data: []
-            },
-            radar: {
-              // shape: 'circle',
+          color: ['black'],
+          legend: {},
+          radar: [
+            {
               indicator: [
-                { name: '1', max: 1000 },
-                { name: '2', max: 1000 },
-                { name: '3', max: 1000 },
-                { name: '4', max: 1000 },
-                { name: '5', max: 1000 },
-                { name: '6', max: 1000 },
-                { name: '7', max: 1000 },
-                { name: '8', max: 1000 },
-                { name: '9', max: 1000 },
-                { name: '10', max: 1000 },
-                { name: '11', max: 1000 },
-                { name: '12', max: 1000 }
-              ]
-            },
-            series: [
-              {
-                name: '',
-                type: 'radar',
-                data: [
-                  {
-                    value: [0, 500, 800, 1000, 800, 500, 0, 500, 800, 1000, 800, 500],
-                    name: ''
-                  }
-                ]
+                { text: '1', max: 100 },
+                { text: '2', max: 100 },
+                { text: '3', max: 100 },
+                { text: '4', max: 100 },
+                { text: '5', max: 100 },
+                { text: '6', max: 100 },
+                { text: '7', max: 100 },
+                { text: '8', max: 100 },
+                { text: '9', max: 100 },
+                { text: '10', max: 100 },
+                { text: '11', max: 100 },
+                { text: '12', max: 100 }
+              ],
+              center: ['50%', '50%'],
+              radius: '70%',
+              nameGap: 5,
+              startAngle: 90,
+              splitNumber: 10,
+              shape: 'circle',
+              axisName: {
+                formatter: '{value}',
+                color: 'black',
+                fontWeight: 'lighter',
+                padding: [0, 0, 0, 0]
+              },
+              splitArea: {
+                areaStyle: {
+                  color: ['#428BD4'],
+                  shadowColor: 'rgba(0, 0, 0, 0.1)',
+                  shadowBlur: 5
+                }
+              },
+              axisLine: {
+                lineStyle: {
+                  color: 'black'
+                }
+              },
+              splitLine: {
+                lineStyle: {
+                  color: 'black'
+                }
               }
-            ]
+            }
+          ],
+          series: [
+            {
+              type: 'radar',
+              emphasis: {
+                lineStyle: {
+                  width: 4
+                }
+              },
+              data: [
+                {
+                  value: [0, 50, 80, 100, 80, 50, 0, 50, 80, 100, 80, 50],
+                  areaStyle: {
+                    color: 'rgba(255, 228, 52, 0.6)'
+                  }
+                }
+              ]
+            }
+          ]
         };
         return option
     }
