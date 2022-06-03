@@ -68,7 +68,7 @@ export default class index extends Component {
 
           <div className={launch.bottom}>
             <Button type="primary" icon={<CloudSyncOutlined />} style={{marginTop: 10, marginLeft:15}}>Sync</Button>
-            <span className='bottom-span'>
+            <span className={launch.bottomSpan}>
               角度：
               <InputNumber
                 style={{
@@ -81,7 +81,7 @@ export default class index extends Component {
                 stringMode
               />
             </span>
-            <span className='bottom-span'>
+            <span className={launch.bottomSpan}>
               经度：
               <InputNumber
                 style={{
@@ -94,7 +94,7 @@ export default class index extends Component {
                 stringMode
               />
             </span>
-            <span className='bottom-span'>
+            <span className={launch.bottomSpan}>
               纬度：
               <InputNumber
                 style={{

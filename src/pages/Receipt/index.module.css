@@ -1,40 +1,64 @@
 .container{
+    position: relative;
     width: 100%;
-    border: 1px solid black;
 }
 
 .top{
-    float: left;
+    position: relative;
     width: 100%;
     height: 50px;
     background-color: gray;
 }
 
 .center{
-    float: left;
+    position: relative;
     width: 100%;
-    height: 400px;
+    height: 530px;
     background-color: white;
     overflow: auto;
 }
 
 .bottom{
-    float: left;
+    position: relative;
     width: 100%;
-    height: 50px;
-    background-color: white;
-    display: flex;
-    flex-direction: row;
+    height: 90px;
 }
 
 .chartCard{
-    float: left;
-    margin-top: 30px;
-    margin-left: 2%;
+    position: absolute;
+    left: 2%;
     width: 96%;
     height: 130px;
     -webkit-box-shadow:3px 3px 3px 3px gray;;
     -moz-box-shadow:3px 3px 3px 3px gray;;
     box-shadow:3px 3px 3px 3px gray;
     overflow: hidden;
+    z-index: 1;
 }
+
+.lineContent{
+    position: absolute;
+    top: 70px;
+    left: 6.8%;
+    width: 86.5%;
+    opacity: 0.5;
+    z-index: 0;
+}
+
+.lineContentBox{
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.line{
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    z-index: 2;
+}
+
