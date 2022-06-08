@@ -1,6 +1,7 @@
 .container{
     position: relative;
     width: 100%;
+    height: 100%;
 }
 
 .top{
@@ -13,8 +14,7 @@
 .center{
     position: relative;
     width: 100%;
-    height: 530px;
-    background-color: white;
+    height: 580px;
     overflow: auto;
 }
 
@@ -22,6 +22,7 @@
     position: relative;
     width: 100%;
     height: 90px;
+    overflow: hidden;
 }
 
 .chartCard{
@@ -38,10 +39,9 @@
 
 .lineContent{
     position: absolute;
-    top: 70px;
+    top: 60px;
     left: 6.8%;
     width: 86.5%;
-    opacity: 0.5;
     z-index: 0;
 }
 

@@ -17,15 +17,8 @@ import ReactEcharts from 'echarts-for-react';
 
 export default class LineChart extends React.Component{
 
-    getOption =()=> {
-        const data = this.props.data;
-        const dateList = data.map(function (item) {
-          return item[0];
-        });
-        const valueList = data.map(function (item) {
-          return item[1];
-        });
-
+    getOption = () => {
+        const {title, labels, values} = this.props
         let option = {
             // Make gradient line here
             visualMap: [
@@ -40,7 +33,7 @@ export default class LineChart extends React.Component{
             title: [
               {
                 left: 'center',
-                text: this.props.title,
+                text: title,
                 textStyle: {
                   fontSize: 17,
                   lineHeight: 15
@@ -52,23 +45,25 @@ export default class LineChart extends React.Component{
             },
             xAxis: [
               {
-                data: dateList
+                type: 'category',
+                boundaryGap: false,
+                data: labels
               }
             ],
             yAxis: [
               {},
             ],
             grid: {
-                top: '10%',
-                left: '5%',
-                right: '5%',
-                bottom: '75%'
+                top: '30%',
+                left: '0%',
+                right: '0%',
+                bottom: '20%'
             },
             series: [
               {
                 type: 'line',
                 showSymbol: false,
-                data: valueList
+                data: values
               }
             ]
           };
@@ -78,8 +73,8 @@ export default class LineChart extends React.Component{
     render(){
       return(
         <div>
-          <div title="折线图表之一">
-              <ReactEcharts option={this.getOption()} theme="Imooc"  style={{height:'400px'}}/>
+          <div title="">
+              <ReactEcharts option={this.getOption()} theme="Imooc"  style={{width: '100%', height:'100%'}}/>
           </div>
         </div>
       )

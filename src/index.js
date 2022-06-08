@@ -7,7 +7,7 @@ import App from './App';
 import 'antd/dist/antd.css'
 
 // 引入路由组件
-import { HashRouter as Router, Switch, Route, Redirect} from 'react-router-dom';
+import { BrowserRouter as Router, Switch, Route, Redirect} from 'react-router-dom';
 // 引入路由配置
 import {mainRoutes} from './routes'
 
