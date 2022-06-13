@@ -3,40 +3,48 @@ import OverviewBar from './index.module.css'
 import LineArea from '../../Echarts/lineArea'
 export default class index extends Component {
 
+  state = {
+    overviewBarLeftBorder: 0,
+    overviewBarWidth: 0
+  }
+
   constructor(props) {
     super(props)
   }
 
+  componentDidMount() {
+    // 初始化折线图和总览图边界、位置
+   let obj = document.getElementById('overview-container')
+   let overviewBarLeftBorder = obj.getBoundingClientRect().left
+   let overviewBarWidth = obj.offsetWidth
+
+
+   // 注意：通过setState() 形式修改状态会触发render() 
+   this.state.overviewBarWidth = overviewBarWidth
+   this.state.overviewBarLeftBorder = overviewBarLeftBorder
+  }
+
   render() {
     // 获取状态数据
-    let {showLeft, showWidth, indicators, labels, values, overviewBarWidth, overviewBarLeftBorder} = this.props
+    let {showRange, indicators, labels, values} = this.props
+    let {overviewBarWidth, overviewBarLeftBorder} = this.state
+    // 计算下方透明部分区域
+    let overviewObj = document.getElementById('overview-container')
+    let showLeft = (showRange[0] / (labels.length - 1)) * 100 + '%'
+    let showWidth = ((showRange[1] - showRange[0]) / (labels.length - 1)) * 100 + '%'
     return (
-      <div className={OverviewBar.container}>
+      <div id="overview-container" className={OverviewBar.container}>
         <LineArea style={{width: '100%', height: '100%'}} labels={labels} values={values}/>
           <div className={OverviewBar.showArea} style={{left: showLeft, width: showWidth}}></div>
           {indicators.map(
             (indicator) => {
-                let integer = Math.trunc(indicator.labelLocation / 1)
+              // indicator.labelLocation 表示全局数据中横坐标索引
+                let index = Math.trunc(indicator.labelLocation / 1)
                 // 位于当前区间的百分之多少位置
                 let decimal = indicator.labelLocation % 1
-                let label = indicator.labels[integer]
-                let index = 0
-                // 计算全局数据中label位置
-                // 查找label在全局数据哪个位置
-                //console.log(label)
-                for (let i = 0 ; i < labels.length ; i++){
-                  let cur_label = labels[i]
-                  if (cur_label === label) {
-                    index = i
-                    break
-                  }
-                }
-                //console.log(index)
                 // 计算全局中每个区间长度
                 let itemWidth = overviewBarWidth / (labels.length - 1)
-                let location = overviewBarLeftBorder + itemWidth * (index + decimal)
-                // 计算left百分比
-                let left = (location / overviewBarWidth) * 100 + '%'
+                let left = itemWidth * (index + decimal) + 'px'
                 return (
                   <div className={OverviewBar.indicator} style={{left: left, backgroundColor: indicator.color}}></div>
                 )
