@@ -83,7 +83,7 @@ export default class index extends Component {
             </div>
           </div>
           <div className={receipt.bottom}>
-            <div style={{float: 'left', marginLeft: '1%', marginTop: '10px', width: '96%', height: '70px',}}>
+            <div style={{float: 'left', marginLeft: '1%', marginTop: '10px', width: '1100px', height: '70px',}}>
               <OverviewBar 
               showRange={this.state.showRange}
               indicators={this.state.indicators} 
@@ -285,7 +285,7 @@ export default class index extends Component {
 
       // 鼠标滚动完，打印当前指示器位置
       let indicators = this.adjustIndicator(start, end)
-      console.log(indicators)
+      //console.log(indicators)
       //this.state.indicators = indicators
 
       this.setState({
@@ -307,18 +307,23 @@ export default class index extends Component {
     for (let i = 0 ; i < this.state.indicators.length ; i++){
       let indicator = this.state.indicators[i]
       let left = '0px'
+      console.log(start, end, indicator.labelLocation)
       if (indicator.labelLocation >=  start && indicator.labelLocation <= end){
         // 在展示区域
+        console.log(' === 中间 ===')
         let itemWidth = showWidth / (end - start)
         //new_indicator.left =(indicator.labelLocation - start) * itemWidth + 'px'
         left = (indicator.labelLocation - start) * itemWidth + 'px'
+        console.log(left)
       }else{
         // 不在展示区域，靠边停放
         if (indicator.labelLocation > end){
           // 靠右边
+          console.log(' === 右边 ===')
           left =  showWidth + 'px'
         }else if (indicator.labelLocation < start){
           // 靠左边
+          console.log(' === 左边 ===')
           left = '0px'
         }
       }
@@ -331,7 +336,9 @@ export default class index extends Component {
     return indicators
   }
 
+  // 这里的change是整数 带方向
   moveRange = (change) => {
+    let {indicators} = this.state
     let start = this.state.showRange[0]
     let end =  this.state.showRange[1]
     let flag = false
@@ -340,14 +347,14 @@ export default class index extends Component {
 
     if (change > 0){
       // 向右边滑动
-      if (change < leftNoShowNum){
+      if (change <= leftNoShowNum){
         start -= change
         end -= change
         flag = true
       }
     }else if (change < 0){
       // 向左边滑动
-      if (-change < rightNoShowNum){
+      if (-change <= rightNoShowNum){
         start += -change
         end += -change
         flag = true
@@ -370,25 +377,29 @@ export default class index extends Component {
         charts.push(new_chart)
       }
 
-      // 鼠标滚动完，打印当前指示器位置
       let indicators = this.adjustIndicator(start, end)
-      console.log(indicators)
+      //console.log(indicators)
       //this.state.indicators = indicators
 
       this.setState({
         charts: charts,
-        indicators: indicators,
-        showRange: [start, end]
+        showRange: [start, end],
+        indicators: indicators
       }, () => {
         
       })
     }
+    return [start, end]
   }
 
   moveChart = (e) => {
-    let {moveRange} = this
+    let { moveRange} = this
+    let {showRange} = this.state
     var e = e || window.event;
     let mouse_init_x = e.clientX
+    let start = showRange[0]
+    let end = showRange[1]
+    let pre_change = 0
     
     /*鼠标的移动事件*/
     document.onmousemove = function (e) {
@@ -398,13 +409,29 @@ export default class index extends Component {
       /*对于大的DIV四个边界的判断*/
       // 计算偏移位置
       let diff = e.clientX - mouse_init_x
-      let change = (diff / showWidth) * (labels.length - 1)
-      moveRange(change)
+      let item_width = showWidth / (end - start) // 每个区间长度
+      let change = Math.trunc(diff / item_width) // 只取整数
+      if (pre_change != change){
+        moveRange(change)
+        pre_change = change
+      }
+      
+      //let range = moveRange(change)
+      //start = range[0]
+      //end = range[1]
     };
     /*鼠标的抬起事件,终止拖动*/
     document.onmouseup = function () {
         document.onmousemove = null;
         document.onmouseup = null;
+
+        // 更新指示器位置
+        //let start = 
+        //let indicators = adjustIndicator(start, end)
+        //this.state.indicators = indicators
+        //this.resetIndicators(indicators)
+        //console.log('拖拽结束:', start, end)
+        
     };
 
   }

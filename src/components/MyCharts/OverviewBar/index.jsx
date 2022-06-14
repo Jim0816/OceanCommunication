@@ -34,7 +34,7 @@ export default class index extends Component {
     let showWidth = ((showRange[1] - showRange[0]) / (labels.length - 1)) * 100 + '%'
     return (
       <div id="overview-container" className={OverviewBar.container}>
-        <LineArea style={{width: '100%', height: '100%'}} labels={labels} values={values}/>
+        <LineArea style={{width: '1000px', height: '100%'}} labels={labels} values={values}/>
           <div className={OverviewBar.showArea} style={{left: showLeft, width: showWidth}}></div>
           {indicators.map(
             (indicator) => {

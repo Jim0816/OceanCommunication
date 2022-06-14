@@ -30,7 +30,7 @@ export default class LineArea extends React.Component{
       return(
         <div>
           <div>
-              <ReactEcharts option={this.state.option} theme="Imooc"  style={{width: '100%', height:'100%'}}/>
+              <ReactEcharts option={this.state.option} theme="Imooc"  style={{width: '1100px', height:'100%'}}/>
           </div>
         </div>
       )
