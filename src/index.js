@@ -18,7 +18,7 @@ root.render(
     <Switch>
       <Route path="/admin" render={routeProps => <App {...routeProps}/>}/>
       {mainRoutes.map(route => {return <Route key={route.path} {...route}></Route>})}
-      <Redirect to="/404" />
+      <Redirect to="/admin/launch" />
     </Switch>
   </Router>
 );
