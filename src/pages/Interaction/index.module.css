@@ -26,7 +26,7 @@
     background-color: green;
 }
 
-.center_top{
+.right_top{
     position: absolute;
     left: 0;
     top: 0;
@@ -34,10 +34,15 @@
     width: 100%;
     height: 50px;
     background-color: black;
-    opacity: 0.3;
+    opacity: 0.5;
+    color: white;
+    text-align: center;
+    font-weight: bolder;
+    font-size: 20px;
+    line-height: 50px;
 }
 
-.center_bgmap{
+.right_bgmap{
     position: absolute;
     left: 0;
     top: 0;
@@ -47,7 +52,7 @@
     background-color: white;
 }
 
-.center_bottom{
+.right_bottom{
     position: absolute;
     right: 15px;
     bottom: 15px;

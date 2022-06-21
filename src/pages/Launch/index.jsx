@@ -1,12 +1,11 @@
 import React, { Component } from 'react'
 import { Checkbox, InputNumber } from 'antd';
-import { Button, Tooltip } from 'antd';
+import { Button } from 'antd';
 import { CloudSyncOutlined } from '@ant-design/icons';
-import EnergyChart from '../../components/Echarts/energy'
-import Triangle from '../../components/MyCharts/Triangle'
 import triangle from '../../asserts/photo/triangle2.png'
 import rador from '../../asserts/photo/rador.png'
 import launch from './index.module.css'
+import store from '../../store/index';
 
 const data = [
   {id: 0, name: '发射机A', icon: rador, lng: 109.91339017089847, lat: 21.085693492605827, angle: 0, size: 100},
@@ -18,9 +17,14 @@ const data = [
 
 export default class index extends Component {
   state = {
-    map: {},
-    markers: [],
-    oper_marker: {}
+    map: {}, // 地图对象引用
+    markers: [], // 页面暂存对象集合
+    oper_marker: {} //当前操作对象
+  }
+
+  constructor(props) {
+    super(props)
+    this.state.markers = data
   }
 
   render() {
@@ -42,7 +46,7 @@ export default class index extends Component {
 
 
           <div className={launch.bottom}>
-            <Button type="primary" icon={<CloudSyncOutlined />} style={{marginTop: 10, marginLeft:15}}>Sync</Button>
+            <Button type="primary" icon={<CloudSyncOutlined />} style={{marginTop: 10, marginLeft:15}} onClick={this.submitChange}>Sync</Button>
             <span className={launch.bottomSpan} style={{width: '200px'}}>
               角度(顺时针0-360)：
               <InputNumber
@@ -122,8 +126,9 @@ export default class index extends Component {
   }
 
   init_markers = (map) => {
-    for (let i = 0 ; i < data.length ; i++){
-      let item = data[i]
+    let {markers} = this.state
+    for (let i = 0 ; i < markers.length ; i++){
+      let item = markers[i]
       let point = new window.BMapGL.Point(item.lng, item.lat);  // 创建点坐标 
       let myIcon = new window.BMapGL.Icon(item.icon, new window.BMapGL.Size(item.size, item.size), {anchor: new window.BMapGL.Size(0, 0)});     
       let marker = new window.BMapGL.Marker(point, {title: item.id + ':' + item.name, icon: myIcon, enableDragging: true, enableClicking: true, draggingCursor: 'move'});
@@ -139,7 +144,7 @@ export default class index extends Component {
       });
       map.addOverlay(marker); 
     }
-    
+    store.dispatch({ type: 'markers', markers })
   }
 
   // 拖动marker更新底部信息
@@ -188,6 +193,24 @@ export default class index extends Component {
     }
     //console.log(oper_marker)
     this.forceUpdate()
+  }
+
+  // 点击同步按钮，更新数据
+  submitChange = () => {
+    let {oper_marker, markers} = this.state
+    if (oper_marker.id == null){
+      alert('请选择地图上组件')
+    }else{
+      for (let i = 0 ; i < markers.length ; i++){
+        if (markers[i].id === oper_marker.id){
+          markers[i] = oper_marker
+          break
+        }
+      }
+      this.state.markers = markers
+      this.forceUpdate()
+      store.dispatch({ type: 'markers', markers })
+    }
   }
 
   
