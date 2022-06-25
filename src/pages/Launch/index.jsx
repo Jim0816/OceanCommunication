@@ -1,11 +1,12 @@
 import React, { Component } from 'react'
-import { Checkbox, InputNumber } from 'antd';
-import { Button } from 'antd';
+import { Checkbox, InputNumber,message, Button } from 'antd';
 import { CloudSyncOutlined } from '@ant-design/icons';
 import triangle from '../../asserts/photo/triangle2.png'
 import rador from '../../asserts/photo/rador.png'
 import launch from './index.module.css'
 import store from '../../store/index';
+
+import  {test} from '../../api/launch'
 
 const data = [
   {id: 0, name: '发射机A', icon: rador, lng: 109.91339017089847, lat: 21.085693492605827, angle: 0, size: 100},
@@ -25,6 +26,13 @@ export default class index extends Component {
   constructor(props) {
     super(props)
     this.state.markers = data
+    test().then(res => {
+      console.log(res)
+    }).catch(err => {
+      console.log(err)
+    })
+
+    
   }
 
   render() {
