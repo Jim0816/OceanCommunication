@@ -54,11 +54,11 @@ export default class index extends Component {
     this.state.map = map
     console.log(markers)
     // 计算距离
-    let location_0 = this.trancformLocation(markers[0].lat, markers[0].lng)
-    let location_1 = this.trancformLocation(markers[1].lat, markers[1].lng)
-    let distance = getDistance( location_0.lat, location_0.lon, location_1.lat, location_1.lon)
-    console.log(distance)
-    this.state.distance = distance
+    //let location_0 = this.trancformLocation(markers[0].lat, markers[0].lng)
+    //let location_1 = this.trancformLocation(markers[1].lat, markers[1].lng)
+    //let distance = getDistance( location_0.lat, location_0.lon, location_1.lat, location_1.lon)
+    //console.log(distance)
+    //this.state.distance = distance
     this.forceUpdate()
   }
 

@@ -3,13 +3,13 @@ import http from '../utils/request';
 
 
 /**
- * 获取首页列表
+ * 推送markers数据到后端
  */
-function test(){
-  return  http("get",'/server/test');
+function add(){
+  return  http("post",'/server/test');
 }
 
 export {
-   test
+   add
 }
 
