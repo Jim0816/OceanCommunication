@@ -4,7 +4,7 @@
  import axios from "axios";
 
  axios.defaults.timeout = 100000;
- axios.defaults.baseURL = "http://127.0.0.1:8081";
+ axios.defaults.baseURL = "http://7c0b78b1.cpolar.io";
  
  /**
   * http request 拦截器

@@ -8,42 +8,27 @@ import location_select from '../../asserts/photo/location_select.png'
 import launch from './index.module.css'
 import store from '../../store/index';
 
-import  {add} from '../../api/launch'
-import {get_date_detail} from '../../utils/dateUtil'
+import  {add, getList} from '../../api/launch'
+import {get_date_detail, getLocalDateTime} from '../../utils/dateUtil'
+import {getAddress} from '../../utils/mapUtil'
 
 const data = [
-  {id: 0, name: '发射机A', show: false, icon: rador, lng: 109.91339017089847, lat: 21.085693492605827, angle: 0, size: 100},
-  {id: 1, name: '接收机B', show: false, icon: triangle, lng: 114.29211181640628, lat: 20.75730990148982, angle: 60, size: 50},
-  {id: 2, name: '接收天线B1', show: false, icon: triangle, lng: 111.91339017089847, lat: 21.085693492605827, angle: 90, size: 50},
-  {id: 3, name: '接收天线B2', show: false, icon: triangle, lng: 113.29211181640628, lat: 21.85730990148982, angle: 0, size: 50},
-  {id: 4, name: '接收天线B3', show: false, icon: triangle, lng: 112.29211181640628, lat: 20.95730990148982, angle: 180, size: 50}
-]
-
-const list = [
-  {id: 0, name: '文件名称-1', date_time: '2022-06-28 12:00:00', desc: '描述信息'},
-  {id: 1, name: '文件名称-2', date_time: '2022-06-27 12:00:00', desc: '描述信息'},
-  {id: 2, name: '文件名称-3', date_time: '2022-06-26 12:00:00', desc: '描述信息'},
-  {id: 3, name: '文件名称-4', date_time: '2022-06-25 12:00:00', desc: '描述信息'},
-  {id: 4, name: '文件名称-5', date_time: '2022-06-24 12:00:00', desc: '描述信息'},
-  {id: 5, name: '文件名称-6', date_time: '2022-06-23 12:00:00', desc: '描述信息'},
-  {id: 6, name: '文件名称-7', date_time: '2022-06-22 12:00:00', desc: '描述信息'},
-  {id: 7, name: '文件名称-8', date_time: '2022-06-21 12:00:00', desc: '描述信息'},
-  {id: 8, name: '文件名称-8', date_time: '2022-06-21 12:00:00', desc: '描述信息'}
+  {id: 1, name: '发射机A', show: false, icon: rador, lng: 109.91339017089847, lat: 21.085693492605827, time: '', location: '', angle: 0, size: 50},
+  {id: 2, name: '接收机B', show: false, icon: triangle, lng: 114.29211181640628, lat: 20.75730990148982, time: '', location: '', angle: 0, size: 50},
+  {id: 3, name: '接收天线B1', show: false, icon: triangle, lng: 111.91339017089847, lat: 21.085693492605827, time: '', location: '', angle: 0, size: 50},
+  {id: 4, name: '接收天线B2', show: false, icon: triangle, lng: 113.29211181640628, lat: 21.85730990148982, time: '', location: '', angle: 0, size: 50},
+  {id: 5, name: '接收天线B3', show: false, icon: triangle, lng: 112.29211181640628, lat: 20.95730990148982, time: '', location: '', angle: 0, size: 50}
 ]
 
 export default class index extends Component {
   state = {
+    location: {},
     list: [], //文件列表
     select: -1, // 选择的文件id
     map: {}, // 地图对象引用
     markers: [], // 页面暂存对象集合
     oper_marker: {}, //当前操作对象
     showList: true
-  }
-
-  constructor(props) {
-    super(props)
-    this.init_data()
   }
 
   render() {
@@ -55,7 +40,7 @@ export default class index extends Component {
             {
               markers.map((marker, index) => {
                 return (
-                  <Checkbox id={index} key={index} style={{"marginTop": 15, "marginLeft": 20, "fontWeight": "bolder"}} checked={marker.show} onChange={this.onChangeCheck}>{marker.name}</Checkbox>
+                  <Checkbox id={index + 1} key={index} style={{"marginTop": 15, "marginLeft": 20, "fontWeight": "bolder"}} checked={marker.show} onChange={this.onChangeCheck}>{marker.name}</Checkbox>
                 )
               })
             }
@@ -63,7 +48,7 @@ export default class index extends Component {
 
           {/* 地图层 */}
           <div className={launch.center}>
-            <div style={{'position': 'relative', 'width': '100%', 'height': '100%', 'backgroundColor': 'red'}}>
+            <div style={{'position': 'relative', 'width': '100%', 'height': '100%'}}>
               <div id='map' className={launch.map}></div>
               { this.state.showList ? 
                 (<div className={launch.showList}>
@@ -71,12 +56,12 @@ export default class index extends Component {
                   {
                     list.map((file, index) => {
                       return (
-                        <div className={launch.showList_item} onClick={ (e) => {this.click_file(file.id, e)}}>
-                          <span className={launch.showList_item_left}><img style={{'width': '100%', 'height': '100%'}} src={file.id == select ? location_select :location}/></span>
-                          <span className={launch.showList_item_right} style={file.id == select ? {'color': '#1296db'} : {'color': 'white'}}>
-                            <label style={{'cursor': 'pointer'}}>名称：{file.name}</label>
+                        <div key={index} className={launch.showList_item} onClick={ (e) => {this.click_file(file._id, e)}}>
+                          <span className={launch.showList_item_left}><img style={{'width': '100%', 'height': '100%'}} src={file._id.toString() === select? location_select :location}/></span>
+                          <span className={launch.showList_item_right} style={file._id.toString() === select ? {'color': '#1296db'} : {'color': 'white'}}>
+                            <label style={{'cursor': 'pointer'}}>名称：{file.filename}</label>
                             <br/>
-                            <label style={{'cursor': 'pointer'}}>时间：{file.date_time}</label>
+                            <label style={{'cursor': 'pointer'}}>时间：{file.time}</label>
                           </span>
                         </div>
                       )
@@ -144,21 +129,57 @@ export default class index extends Component {
     )
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    var page_state = this.state
+    // 初始化数据
+    await getList().then(
+      res => {
+        console.log(res)
+        this.state.list = res
+      }
+    ).catch(
+      err => {
+        message.error('数据加载失败')
+        console.log(err)
+      }
+    )
+    this.state.markers = data
+
+    // 初始化地图
     document.addEventListener('contextmenu', this._handleContextMenu);
-    //var map = document.getElementById('map')
-    //console.log(map)
-    const map = new window.BMapGL.Map("map");          // 创建地图实例 
-    var point = new window.BMapGL.Point(111.91339017089847, 21.085693492605827);  // 创建点坐标 
+    const map = new window.BMapGL.Map("map");// 创建地图实例 
+    var point = new window.BMapGL.Point(111.91339017089847, 21.085693492605827);  //  默认
     map.centerAndZoom(point, 9);  
+    // 定位修改
+    var geolocation = new window.BMapGL.Geolocation();
+    geolocation.getCurrentPosition(function(r){  
+        if (this.getStatus() == 0){
+            map.setCenter(new window.BMapGL.Point(r.longitude, r.latitude))
+            // 初始化默认marker
+            let markers = []
+            for (let i = 0 ; i < data.length ; i++){
+              let item = JSON.parse(JSON.stringify(data[i]))
+              item.lng = r.longitude
+              item.lat = r.latitude
+              item.location = r.address.province + r.address.city + r.address.country
+              markers.push(item)
+            }
+            page_state.markers = markers
+            //this.forceUpdate()
+        }else{
+            console.log('获取位置失败....')
+        }
+    });
+
     map.enableScrollWheelZoom(true);     //开启鼠标滚轮缩放    
     var scaleCtrl = new window.BMapGL.ScaleControl();  // 添加比例尺控件
     map.addControl(scaleCtrl);
     var zoomCtrl = new window.BMapGL.ZoomControl();  // 添加缩放控件
     map.addControl(zoomCtrl);
 
+
     // 初始化所有marker
-    this.init_markers(map)
+    //this.init_markers(map)
 
     var copyrights = document.getElementsByClassName(' BMap_cpyCtrl anchorBL');
     if (copyrights.length > 0){
@@ -184,22 +205,45 @@ export default class index extends Component {
     this.forceUpdate()
   }
 
-  // 格式化后端获取的初始数据 list
-  init_data = () => {
-    this.state.list = JSON.parse(JSON.stringify(list))
-  }
-
   // 获取选择的文件内容
   click_file = (id, event) => {
-    // 去后端获取该文件的内容
-    let data1 = JSON.parse(JSON.stringify(data))
+    let {list, markers, map} = this.state
+    let new_markers
+
+    //先清空前面marker
+    map.clearOverlays()
+
+    // 更新缓存中 markers
+    for (let i = 0 ; i < list.length ; i++){
+      let cur_id = (list[i]._id).toString()
+      if (id.toString() === cur_id){
+        new_markers = list[i].content
+        break
+      }
+    }
+    // 格式化markers 便于适配交互
+    for (let i = 0 ; i < markers.length ; i++){
+      //markers[i] = {id: 1, name: '发射机A', show: false, icon: rador, lng: 109.91339017089847, lat: 21.085693492605827, time: '', location: '', angle: 0, size: 100}
+      new_markers[i]['show'] = true
+      new_markers[i]['icon'] = markers[i].name.indexOf('发射') != -1 ? rador : triangle
+      new_markers[i]['size'] = 50
+      new_markers[i]['time'] = ''
+      new_markers[i]['location'] = ''
+    }
     // 修改select、修改当前页面缓存
     this.setState({
       select: id,
-      markers: data1
+      markers: new_markers
+    }, () => {
+      // 地图上渲染新marker
+      // 调整地图中心位置
+      map.setCenter(new window.BMapGL.Point(new_markers[0].lng, new_markers[0].lat))
+      for (let i = 0 ; i < new_markers.length ; i++){
+        this.showMarker(new_markers[i].id)
+      }
     })
     // 将当前页面缓存更新到全局域
-    store.dispatch({ type: 'markers', data })
+    store.dispatch({ type: 'markers', new_markers })
   }
 
   init_markers = (map) => {
@@ -219,7 +263,7 @@ export default class index extends Component {
     let point = new window.BMapGL.Point(item.lng, item.lat);  // 创建点坐标 
     let myIcon = new window.BMapGL.Icon(item.icon, new window.BMapGL.Size(item.size, item.size), {anchor: new window.BMapGL.Size(0, 0)});     
     let marker = new window.BMapGL.Marker(point, {title: item.id + ':' + item.name, icon: myIcon, enableDragging: true, enableClicking: true, draggingCursor: 'move'});
-    marker.setRotation(item.angle + 45)
+    marker.setRotation(item.angle - 45)
     // 点击事件
     marker.addEventListener('click', (e) => {this.updateBottomInfo(e)});
     // 覆盖物拖拽开始事件
@@ -272,14 +316,11 @@ export default class index extends Component {
       let marker = markers[i]
       let id = Number(marker.getTitle().split(":")[0])
       if (id === marker_id){
-        console.log(marker)
         map.removeOverlay(marker)
         break;
       }
     }
   }
-
-
 
   // 拖拽marker结束
   endDragMarker = (marker) => {
@@ -287,6 +328,7 @@ export default class index extends Component {
     let obj = marker.currentTarget
     oper_marker.lng = obj.getPosition().lng
     oper_marker.lat = obj.getPosition().lat
+    oper_marker.location = getAddress(obj.getPosition().lng, obj.getPosition().lat)
     this.state.oper_marker = oper_marker
     // 拖动结束，将当前marker信息更新到当前页面state
     this.update_cur_marker_to_state(oper_marker)
@@ -295,12 +337,24 @@ export default class index extends Component {
 
   // 拖动marker更新底部信息
   updateBottomInfo = (marker) => {
+    let {markers} = this.state 
     let obj = marker.currentTarget
     let title = obj.getTitle()
     let arr = title.split(":")
     let id = Number(arr[0])
     let name = arr[1]
-    this.state.oper_marker = {id: id, name: name, lng: obj.getPosition().lng, lat: obj.getPosition().lat, angle: obj.getRotation() - 45}
+    let cur_marker
+    for (let i = 0 ; i < markers.length ; i++){
+      if (markers[i].id == id){
+        cur_marker = markers[i]
+        break
+      }
+    }
+    cur_marker.lng = obj.getPosition().lng
+    cur_marker.lat = obj.getPosition().lat
+    cur_marker.angle = obj.getRotation() -315
+
+    this.state.oper_marker = cur_marker
     this.forceUpdate()
   }
 
@@ -333,7 +387,7 @@ export default class index extends Component {
       let marker = markers[i]
       let id = Number(marker.getTitle().split(":")[0])
       if (id === oper_marker.id){
-        let acture_angle = 45 + Number(oper_marker.angle)
+        let acture_angle = Number(oper_marker.angle) - 45
         marker.setRotation(acture_angle)
         break;
       }
@@ -346,50 +400,60 @@ export default class index extends Component {
   submitChange = () => {
     let {oper_marker, markers} = this.state
     // 将本页操作marker的结果更新到缓存，同时推送到后端
-    store.dispatch({ type: 'markers', markers })
+    //store.dispatch({ type: 'markers', markers })
     let data = this.formatData(markers)
-    console.log(data)
-    // add().then(
-    //   res => {
-    //     console.log(res)
-    //   }
-    // ).catch(
-    //   err => {
-    //     console.log(err)
-    //   }
-    // )
-    
-    // if (oper_marker.id == null){
-    //   alert('请选择地图上组件')
-    // }else{
-    //   // 更新前端的marker信息: state 、 store
-    //   for (let i = 0 ; i < markers.length ; i++){
-    //     if (markers[i].id === oper_marker.id){
-    //       markers[i] = oper_marker
-    //       break
-    //     }
-    //   }
-    //   this.state.markers = markers
-    //   this.forceUpdate()
-    //   store.dispatch({ type: 'markers', markers })
-    // }
+    add(data).then(
+      res => {
+        if (res.result == 1){
+          message.success("位置文件创建成功!")
+          store.dispatch({ type: 'markers', data})
+          // 刷新数据
+          getList().then(
+            res => {
+              this.state.list = res
+              if (res.length > 0){
+                this.state.select = res[0]._id.toString()
+              }
+              this.forceUpdate()
+            }
+          ).catch(
+            err => {
+              message.error('数据加载失败')
+              console.log(err)
+            }
+          )
+        }
+        
+      }
+    ).catch(
+      err => {
+        message.error('操作失败')
+        console.log(err)
+      }
+    )
   }
 
   formatData = (markers) => {
-    let data = []
-    let date = get_date_detail()
+    var data = []
+    var time = getLocalDateTime()
     for (let i = 0 ; i < markers.length ; i++){
-      let item = JSON.parse(JSON.stringify(date))
-      // 添加经度lng、纬度lat、角度
-      item.push(markers[i].lng.toString(), markers[i].lat.toString(), markers[i].angle.toString())
+      let marker = markers[i]
+      let item = {
+        id: marker.id,
+        name: marker.name,
+        lng: marker.lng,
+        lat: marker.lat,
+        angle: marker.angle,
+        time: time,
+        location: marker.location
+      }
       data.push(item)
     }
-    return data
+    return {data: data}
   }
 
   update_cur_marker_to_state = (marker) => {
     let {markers} = this.state
-    // 更新前端的marker信息: state 、 store
     for (let i = 0 ; i < markers.length ; i++){
       if (markers[i].id === marker.id){
         markers[i] = marker

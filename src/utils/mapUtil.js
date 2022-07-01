@@ -207,11 +207,42 @@ function getDistance( lat1, lng1, lat2, lng2){
     return s;
 }
 
+/**
+ *  睡眠函数
+ *  @param numberMillis -- 要睡眠的毫秒数
+ */
+ function sleep(numberMillis) {
+    var now = new Date();
+    var exitTime = now.getTime() + numberMillis;
+    while (true) {
+        now = new Date();
+        if (now.getTime() > exitTime)
+            return;
+    }
+}
+  
+  
+
+//通过经纬度解析详细地址
+const getAddress = (lng, lat) => {    
+    // 创建地理编码实例      
+    var myGeo = new window.BMapGL.Geocoder();      
+    // 根据坐标得到地址描述    
+    console.log(lng, lat)
+    myGeo.getLocation(new window.BMapGL.Point(lng, lat), function(result){      
+        if (result){      
+            return result.address    
+        }      
+    });
+    return ""
+}
+
 
 module.exports = {
     bd_decrypt_To_gcj : bd_decrypt_To_gcj ,
     gcj_decrypt_To_wgs : gcj_decrypt_To_wgs ,
-    getDistance: getDistance
+    getDistance: getDistance,
+    getAddress: getAddress
 }
 
 
