@@ -158,6 +158,31 @@ const mercator_decrypt = (mercatorLat, mercatorLon) => {
      return {'lat' : y, 'lon' : x};
      //*/
 }
+
+// bd转wgs
+const bd_to_wgs = (bdLon, bdLat) => {
+    // 1. bd to gcj
+    let gcj_location = bd_decrypt_To_gcj(bdLat, bdLon)
+    // 2.gcj to wgs
+    let wgs_location = gcj_decrypt_exact(gcj_location.lat, gcj_location.lon)    
+    return {
+        'lat': wgs_location.lat,
+        'lng': wgs_location.lon
+    }
+}
+
+// wgs转bd
+const wgs_to_bd = (wgsLon, wgsLat) => {
+    // 1.wgs to gcj
+    let gcj_location = gcj_encrypt(wgsLat, wgsLon)
+    // 2.gcj to bd
+    let bd_location = bd_encrypt(gcj_location.lat, gcj_location.lon)
+    return {
+        'lat': bd_location.lat,
+        'lng': bd_location.lon
+    }
+}
+
 // two point's distance
 const distance = (latA, lonA, latB, lonB) => {
     var earthR = 6371000.;
@@ -224,11 +249,10 @@ function getDistance( lat1, lng1, lat2, lng2){
   
 
 //通过经纬度解析详细地址
-const getAddress = (lng, lat) => {    
+const getAddress = (lng, lat) => {
     // 创建地理编码实例      
     var myGeo = new window.BMapGL.Geocoder();      
     // 根据坐标得到地址描述    
-    console.log(lng, lat)
     myGeo.getLocation(new window.BMapGL.Point(lng, lat), function(result){      
         if (result){      
             return result.address    
@@ -242,7 +266,9 @@ module.exports = {
     bd_decrypt_To_gcj : bd_decrypt_To_gcj ,
     gcj_decrypt_To_wgs : gcj_decrypt_To_wgs ,
     getDistance: getDistance,
-    getAddress: getAddress
+    getAddress: getAddress,
+    bd_to_wgs: bd_to_wgs,
+    wgs_to_bd: wgs_to_bd
 }
 
 

@@ -1,8 +1,10 @@
 import React, { Component } from 'react'
-import { Checkbox, InputNumber,message, Button } from 'antd';
+
+import { Checkbox, InputNumber,message, Button, Alert, Spin } from 'antd';
 import { CloudSyncOutlined } from '@ant-design/icons';
-import triangle from '../../asserts/photo/triangle2.png'
-import rador from '../../asserts/photo/rador.png'
+import triangle from '../../asserts/photo/arrow_black.png'
+import acceptor from '../../asserts/photo/arrow_red.png'
+import rador from '../../asserts/photo/rador2.png'
 import location from '../../asserts/photo/location.png'
 import location_select from '../../asserts/photo/location_select.png'
 import launch from './index.module.css'
@@ -10,11 +12,11 @@ import store from '../../store/index';
 
 import  {add, getList} from '../../api/launch'
 import {get_date_detail, getLocalDateTime} from '../../utils/dateUtil'
-import {getAddress} from '../../utils/mapUtil'
+import {getAddress, bd_to_wgs, wgs_to_bd} from '../../utils/mapUtil'
 
 const data = [
-  {id: 1, name: '发射机A', show: false, icon: rador, lng: 109.91339017089847, lat: 21.085693492605827, time: '', location: '', angle: 0, size: 50},
-  {id: 2, name: '接收机B', show: false, icon: triangle, lng: 114.29211181640628, lat: 20.75730990148982, time: '', location: '', angle: 0, size: 50},
+  {id: 1, name: '发射机A', show: false, icon: rador, lng: 109.91339017089847, lat: 21.085693492605827, time: '', location: '', angle: 0, size: 100},
+  {id: 2, name: '接收机B', show: false, icon: acceptor, lng: 114.29211181640628, lat: 20.75730990148982, time: '', location: '', angle: 0, size: 50},
   {id: 3, name: '接收天线B1', show: false, icon: triangle, lng: 111.91339017089847, lat: 21.085693492605827, time: '', location: '', angle: 0, size: 50},
   {id: 4, name: '接收天线B2', show: false, icon: triangle, lng: 113.29211181640628, lat: 21.85730990148982, time: '', location: '', angle: 0, size: 50},
   {id: 5, name: '接收天线B3', show: false, icon: triangle, lng: 112.29211181640628, lat: 20.95730990148982, time: '', location: '', angle: 0, size: 50}
@@ -28,12 +30,14 @@ export default class index extends Component {
     map: {}, // 地图对象引用
     markers: [], // 页面暂存对象集合
     oper_marker: {}, //当前操作对象
-    showList: true
+    showList: true,
+    loading_index: 5
   }
 
   render() {
-    let {oper_marker, markers, list, select} = this.state
-
+    let {oper_marker, markers, list, select, loading_index} = this.state
+    //let height = this.adjustCenterSize()
+    //console.log(height)
     return (
       <div className={launch.container}>
           <div className={launch.top}>
@@ -47,8 +51,11 @@ export default class index extends Component {
           </div>
 
           {/* 地图层 */}
-          <div className={launch.center}>
+          <div id='center' className={launch.center}>
             <div style={{'position': 'relative', 'width': '100%', 'height': '100%'}}>
+              <div className={launch.loading} style={{'zIndex': loading_index}}>
+                <Spin tip="正在获取您的位置，请耐心等待..." size="large" style={{'marginTop': '20px'}}></Spin>
+              </div>
               <div id='map' className={launch.map}></div>
               { this.state.showList ? 
                 (<div className={launch.showList}>
@@ -131,10 +138,14 @@ export default class index extends Component {
 
   async componentDidMount() {
     var page_state = this.state
+    var that = this
+    //this.adjustCenterSize()
+
     // 初始化数据
     await getList().then(
       res => {
         console.log(res)
+        // 里面的坐标为wgs坐标，渲染时再转换
         this.state.list = res
       }
     ).catch(
@@ -143,10 +154,11 @@ export default class index extends Component {
         console.log(err)
       }
     )
+    // 附近默认坐标点
     this.state.markers = data
 
-    // 初始化地图
     document.addEventListener('contextmenu', this._handleContextMenu);
+    // 初始化地图
     const map = new window.BMapGL.Map("map");// 创建地图实例 
     var point = new window.BMapGL.Point(111.91339017089847, 21.085693492605827);  //  默认
     map.centerAndZoom(point, 9);  
@@ -159,13 +171,15 @@ export default class index extends Component {
             let markers = []
             for (let i = 0 ; i < data.length ; i++){
               let item = JSON.parse(JSON.stringify(data[i]))
-              item.lng = r.longitude
-              item.lat = r.latitude
+              let wgs_location = bd_to_wgs(r.longitude, r.latitude)
+              item.lng = wgs_location.lng
+              item.lat = wgs_location.lat
               item.location = r.address.province + r.address.city + r.address.country
               markers.push(item)
             }
             page_state.markers = markers
-            //this.forceUpdate()
+            page_state.loading_index = -1
+            that.forceUpdate()
         }else{
             console.log('获取位置失败....')
         }
@@ -225,8 +239,8 @@ export default class index extends Component {
     for (let i = 0 ; i < markers.length ; i++){
       //markers[i] = {id: 1, name: '发射机A', show: false, icon: rador, lng: 109.91339017089847, lat: 21.085693492605827, time: '', location: '', angle: 0, size: 100}
       new_markers[i]['show'] = true
-      new_markers[i]['icon'] = markers[i].name.indexOf('发射') != -1 ? rador : triangle
-      new_markers[i]['size'] = 50
+      new_markers[i]['icon'] = markers[i].name.indexOf('发射') != -1 ? rador : (markers[i].name.indexOf('接收机') != -1 ? acceptor : triangle)
+      new_markers[i]['size'] = markers[i].name.indexOf('发射') != -1 ? 100 : 50
       new_markers[i]['time'] = ''
       new_markers[i]['location'] = ''
     }
@@ -237,7 +251,8 @@ export default class index extends Component {
     }, () => {
       // 地图上渲染新marker
       // 调整地图中心位置
-      map.setCenter(new window.BMapGL.Point(new_markers[0].lng, new_markers[0].lat))
+      let bd_location = wgs_to_bd(new_markers[0].lng, new_markers[0].lat)
+      map.setCenter(new window.BMapGL.Point(bd_location.lng, bd_location.lat))
       for (let i = 0 ; i < new_markers.length ; i++){
         this.showMarker(new_markers[i].id)
       }
@@ -260,7 +275,11 @@ export default class index extends Component {
 
   // 创建一个marker对象
   generate_marker = (item) => {
-    let point = new window.BMapGL.Point(item.lng, item.lat);  // 创建点坐标 
+    // 数据中存储的坐标为wgs坐标，需要转换为bd坐标，渲染在百度地图
+    console.log('转换前wgs坐标: ', item.lng, item.lat)
+    const bd_location = wgs_to_bd(item.lng, item.lat)
+    console.log('转换后bd坐标: ', bd_location.lng, bd_location.lat)
+    let point = new window.BMapGL.Point(bd_location.lng, bd_location.lat);  // 创建点坐标 
     let myIcon = new window.BMapGL.Icon(item.icon, new window.BMapGL.Size(item.size, item.size), {anchor: new window.BMapGL.Size(0, 0)});     
     let marker = new window.BMapGL.Marker(point, {title: item.id + ':' + item.name, icon: myIcon, enableDragging: true, enableClicking: true, draggingCursor: 'move'});
     marker.setRotation(item.angle - 45)
@@ -331,6 +350,7 @@ export default class index extends Component {
     oper_marker.location = getAddress(obj.getPosition().lng, obj.getPosition().lat)
     this.state.oper_marker = oper_marker
     // 拖动结束，将当前marker信息更新到当前页面state
+    // 注意：此时的oper_marker为bd坐标 更新到markers时需要转换为wgs坐标
     this.update_cur_marker_to_state(oper_marker)
     this.forceUpdate()
   }
@@ -352,7 +372,7 @@ export default class index extends Component {
     }
     cur_marker.lng = obj.getPosition().lng
     cur_marker.lat = obj.getPosition().lat
-    cur_marker.angle = obj.getRotation() -315
+    cur_marker.angle = obj.getRotation() - 315
 
     this.state.oper_marker = cur_marker
     this.forceUpdate()
@@ -397,11 +417,14 @@ export default class index extends Component {
   }
 
   // 点击同步按钮，更新数据
+  // 注意：拖拽marker后，会在拖拽结束时将bd坐标转换为wgs坐标存入markers
   submitChange = () => {
     let {oper_marker, markers} = this.state
-    // 将本页操作marker的结果更新到缓存，同时推送到后端
-    //store.dispatch({ type: 'markers', markers })
+    // 此时markers内部的坐标全部为wgs坐标
+    //console.log(markers)
     let data = this.formatData(markers)
+    console.log('提交前数据: ', data)
+    
     add(data).then(
       res => {
         if (res.result == 1){
@@ -456,7 +479,14 @@ export default class index extends Component {
     let {markers} = this.state
     for (let i = 0 ; i < markers.length ; i++){
       if (markers[i].id === marker.id){
-        markers[i] = marker
+        let new_marker = JSON.parse(JSON.stringify(marker))
+        console.log('转换前bd坐标:', marker.lng, marker.lat)
+        let wgs_location = bd_to_wgs(marker.lng, marker.lat)
+        console.log('转换后wgs坐标：', wgs_location.lng, wgs_location.lat)
+        new_marker.lng = wgs_location.lng
+        new_marker.lat = wgs_location.lat
+        // 更新当前marker到markes
+        markers[i] = new_marker
         break
       }
     }
