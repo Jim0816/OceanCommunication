@@ -13,12 +13,13 @@ import 'echarts/lib/component/title';
 import 'echarts/lib/component/legend';
 import 'echarts/lib/component/markPoint';
 import ReactEcharts from 'echarts-for-react';
+import { string } from 'prop-types';
 
 
 export default class LineChart extends React.Component{
 
     getOption = () => {
-        const {title, labels, values} = this.props
+        const {title, labels, childLabels, values} = this.props
         let option = {
             // Make gradient line here
             visualMap: [
@@ -35,7 +36,7 @@ export default class LineChart extends React.Component{
                 left: 'center',
                 text: title,
                 textStyle: {
-                  fontSize: 17,
+                  fontSize: 15,
                   lineHeight: 15
                 },
               }
@@ -48,16 +49,20 @@ export default class LineChart extends React.Component{
                 type: 'category',
                 boundaryGap: false,
                 data: labels
+              },
+              {
+                type: 'category',
+                position: 'top',
+                boundaryGap: false,
+                data: childLabels
               }
             ],
-            yAxis: [
-              {},
-            ],
+            yAxis: {type: 'value'},
             grid: {
                 top: '30%',
                 left: '0%',
                 right: '0%',
-                bottom: '20%'
+                bottom: '15%'
             },
             series: [
               {
@@ -71,9 +76,11 @@ export default class LineChart extends React.Component{
     }
   
     render(){
+      let {height} = this.props
+      let chartHeight = height + 'px'
       return(
         <div>
-          <div title="">
+          <div style={{width: '100%', height: chartHeight }}>
               <ReactEcharts option={this.getOption()} theme="Imooc"  style={{width: '100%', height:'100%'}}/>
           </div>
         </div>

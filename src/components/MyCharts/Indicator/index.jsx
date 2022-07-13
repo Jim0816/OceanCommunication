@@ -65,15 +65,14 @@ export default class index extends Component {
     let {indicators} = this.props
     const elements=[];
     indicators.forEach((indicator, index)=>{
-      //console.log(indicator)
       elements.push(
         <div id={'indicator-' + indicator.id} ref='move' key={index} style={{position: 'absolute', width: '10px', height: '100%', left: indicator.left, display: 'flex', flexDirection: 'column', alignContent: 'flex-start', cursor: 'move'}} 
         onMouseDown={e => {this.small_down(indicator.id, e)}}
         onClick={e => {this.selectIndicator(indicator.id, e)}}>
-          <span style={{width: '100%', height: '80%', display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
+          <span style={{width: '100%', height: '90%', display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
             <span id={'indicator-line-' + indicator.id} style={{width: '0px', height: '100%', border: '1px', borderStyle: indicator.main ? 'solid': 'dotted', borderColor: indicator.color}}></span>
           </span>
-          <span style={{width: '100%', height: '20%', backgroundColor: indicator.color}}></span>
+          <span style={{width: '100%', height: '10%', backgroundColor: indicator.color}}></span>
         </div>
       )
     })

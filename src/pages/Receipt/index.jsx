@@ -6,15 +6,20 @@ import LineChart from '../../components/Echarts/lineChart'
 import OverviewBar from '../../components/MyCharts/OverviewBar'
 import Indicator from '../../components/MyCharts/Indicator'
 import Draggable from 'react-draggable'
+import {getData} from '../../utils/test'
 
-const labels = ["2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012" , "2013", "2014", "2015"]
+const labels = ['2011', '2011', '2012', '2012', '2013', '2013']
+const childLabels = ['1', '1', '2', '2', '3', '3', '4', '4', '5 ', '5', '6', '6']
 const values = [
-  {title: '发射信号', data: [16, 49, 129, 29, 129, 29, 90, 69, 199, 70, 16, 49, 129, 29, 129, 29]},
-  {title: '接收信号', data: [36, 0, 9, 29, 39, 79, 90, 100, 139, 180, 16, 29, 39, 79, 90, 100]}
+  {title: '数据库A', data: [16, 49, 129, 29, 129, 29, 90, 69, 199, 70, 16, 49]},
+  {title: '数据库B', data: [36, 0, 9, 29, 39, 79, 90, 100, 139, 180, 16, 29]},
+  {title: '数据库C', data: [90, 0, 9, 89, 39, 79, 90, 10, 139, 10, 16, 29]}
 ]
 
 const showWidth = 1000
+const chartHeight = 150
 const colors = ['red', 'black', 'green', 'orange', 'pink', 'yellow', 'blue']
+
 
 
 const rdom = require('react-dom');
@@ -22,6 +27,9 @@ const rdom = require('react-dom');
 export default class index extends Component {
 
   state = {
+    labels: [],
+    childLabels: [],
+    values: [],
     indicators: [],
     charts: [], // 记录上方所有折线图数据
     showRange: [], // 当前展示区间索引
@@ -38,14 +46,16 @@ export default class index extends Component {
    }
 
    componentDidMount() {
+    // websocket连接
+    this.websocket_conn()
      // 初始化折线图和总览图边界、位置
-    let lineBox = document.getElementById('line-border-box')
-    let lineBoxLeft = lineBox.getBoundingClientRect().left
-    let lineBoxWidth = lineBox.offsetWidth
+    // let lineBox = document.getElementById('line-border-box')
+    // let lineBoxLeft = lineBox.getBoundingClientRect().left
+    // let lineBoxWidth = lineBox.offsetWidth
 
     // 注意：通过setState() 形式修改状态会触发render() 
-    this.state.lineChartWidth = lineBoxWidth
-    this.state.LineChartLeftBorder = lineBoxLeft
+    // this.state.lineChartWidth = lineBoxWidth
+    // this.state.LineChartLeftBorder = lineBoxLeft
     
    }
 
@@ -56,38 +66,53 @@ export default class index extends Component {
       <div className={receipt.container}>
           <div className={receipt.center} onWheel={(e) => this.handleScroll(e)} >
             {/* 折线图 */}
-            {charts.map(
-                (chart) => {
-                    return (
-                      <div id='chartCard' className={receipt.chartCard} style={{top: chart.top}}>
-                        <div onMouseDown={e => {this.moveChart(e)}} id='line-border-box' style={{position: 'relative', width: showWidth + 'px', height: '100%', overflow: 'hidden'}}>
-                          {/* <div onClick={e => {this.adjustShowRange(-1 ,e)}} style={{position: 'absolute', top: '25px', left: '10px', width: '50px', height: '50px', backgroundColor: 'black', opacity: '0.4', borderRadius: '40px', zIndex: 3, color: 'white', fontSize: '30px', fontWeight: 'bolder', lineHeight: '45px', textAlign: 'center'}}><label>&lt;</label></div>
-                          <div onClick={e => {this.adjustShowRange(1, e)}} style={{position: 'absolute', top: '25px', left: '940px', width: '50px', height: '50px', backgroundColor: 'black', opacity: '0.4', borderRadius: '40px', zIndex: 3, color: 'white', fontSize: '30px', fontWeight: 'bolder', lineHeight: '45px', textAlign: 'center'}}><label>&gt;</label></div> */}
-                          <LineChart style={{width: '100%', height: '100%'}} title={chart.title} labels={chart.labels} values={chart.values}/>
-                        </div>
-                      </div>
-                    )
-                }
-            )}
+            <div className={receipt.chartContainer}>
+              <div style={{position: 'relative', width: '100%', height: '100%'}}>
+                {charts.map(
+                    (chart, index) => {
+                        return (
+                          <div key={index} id='chartCard' className={receipt.chartCard} style={{height: chartHeight + 'px'}}>
+                            <div onMouseDown={e => {this.moveChart(e)}} id='line-border-box' style={{position: 'relative', width: showWidth + 'px', height: '100%', overflow: 'hidden'}}>
+                              <LineChart title={chart.title} labels={chart.labels} childLabels={chart.childLabels} values={chart.values} height={chartHeight}/>
+                            </div>
+                          </div>
+                        )
+                    }
+                )}
+              </div>
+            </div>
+            
             
             {/* 时间指示器 竖线 */}
-            <div id='lineContentBox-parent'className={receipt.lineContent} style={{height: 180 * charts.length + 'px'}}>
-              <div id='lineContentBox' className={receipt.lineContentBox} style={{width: showWidth + 10 + 'px'}}>
-                <Indicator 
-                  labels={labels}
+            <div className={receipt.indicatorContainer}>
+              {/*  注意: 5代表指示器宽度 */}
+              <div style={{position: 'relative', top: '60px', width: showWidth + 5 + 'px', height: (chartHeight + 13) * 3 - 60 + 'px'}}>
+              <Indicator
+                  labels={this.state.labels}
                   showWidth={showWidth}
                   showRange={this.state.showRange}
                   indicators={this.state.indicators} 
                   updateIndicators={this.updateIndicators}/>
               </div>
             </div>
+            {/* <div id='lineContentBox-parent'className={receipt.lineContent} style={{height: (chartHeight - 28) * charts.length + 'px'}}>
+              <div id='lineContentBox' className={receipt.lineContentBox} style={{width: showWidth + 10 + 'px'}}>
+                <Indicator 
+                  labels={this.state.labels}
+                  showWidth={showWidth}
+                  showRange={this.state.showRange}
+                  indicators={this.state.indicators} 
+                  updateIndicators={this.updateIndicators}/>
+              </div>
+            </div> */}
+
           </div>
           <div className={receipt.bottom}>
             <div style={{float: 'left', marginLeft: '1%', marginTop: '10px', width: '1100px', height: '70px',}}>
               <OverviewBar 
               showRange={this.state.showRange}
               indicators={this.state.indicators} 
-              labels={labels} values={values} />
+              labels={this.state.labels} values={this.state.values} />
             </div>
             <div style={{float: 'left', marginLeft: '0.4%', marginTop: '10px', width: '2%', height: '70px', fontSize: '20px', lineHeight: '20px', fontWeight: 'bolder'}}>
               <span onClick={this.addIndicator} style={{float: 'left', marginLeft: '0%', marginTop: '7px', width: '100%', height: '23px', textAlign: 'center', background: 'gray', cursor: 'pointer'}}>+</span>
@@ -130,16 +155,75 @@ export default class index extends Component {
     
   }
 
-  // 初始化数据
-  init = () => {
+  websocket_conn = () => {
+    if(typeof(WebSocket) == "undefined") {
+      console.log("您的浏览器不支持WebSocket");
+    }else{
+      console.log("您的浏览器支持WebSocket");
+    }
+
+    let websocket  = new WebSocket("ws://localhost:8090");
+    //打开事件
+    websocket.onopen = function () {
+      console.log("websocket已打开");
+    }
+    //发现消息进入
+    websocket.onmessage = this.message
+    //关闭事件
+    websocket.onclose = function() {
+      console.log("websocket已关闭");
+    };
+    //发生了错误事件
+    websocket.onerror = function() {
+      console.log("websocket发生了错误");
+    }
+  }
+
+  message = (msg) => {
+    console.log("websocket有数据");
+    // 逻辑处理，这里this可以正常获取了
     // 初始化折线图数据
+    const data = JSON.parse(msg.data)
+    console.log(data);
+    let labels = data.labels
+    let values = data.values
+
     var charts = []
     for (let i = 0 ; i < values.length ; i++){
       let value = values[i]
       let chart = {
         title: value.title,
-        top: (160 * i + 30) + 'px',
+        top: (chartHeight * i + 10) + 'px',
         labels: labels,
+        values: value.data
+      }
+      charts.push(chart)
+    }
+
+    this.setState({
+      labels: labels,
+      values: values,
+      charts: charts,
+      showRange: [0, labels.length - 1]
+    })
+ }
+
+  // 初始化数据
+  init = () => {
+    const data = getData()
+    console.log(data)
+    this.state.labels = data.labels;
+    this.state.childLabels = data.childLabels;
+    this.state.values = data.values;
+    // 初始化折线图数据
+    var charts = []
+    for (let i = 0 ; i < this.state.values.length ; i++){
+      let value = this.state.values[i]
+      let chart = {
+        title: value.title,
+        top: (chartHeight * i + 10) + 'px',
+        labels: this.state.labels,
+        childLabels: this.state.childLabels,
         values: value.data
       }
       charts.push(chart)
@@ -148,13 +232,13 @@ export default class index extends Component {
     // 初始化时间指示器
     // 更新状态数据
     this.state.charts = charts
-    this.state.lineShowLabels = labels
-    this.state.showRange = [0, labels.length -1]
+    this.state.lineShowLabels = this.state.labels
+    this.state.showRange = [0, this.state.labels.length -1]
   }
 
   // 添加时间指示器
   addIndicator = () => {
-    let {indicators, showRange} = this.state
+    let {indicators, showRange, labels} = this.state
     // 选取一种新颜色
     let color = ''
     for (let i = 0 ; i < colors.length ; i++ ){
@@ -245,6 +329,7 @@ export default class index extends Component {
   }
 
   changeLineChartData = (change) => {
+    let {labels, values} = this.state
     let size = this.state.showRange[1] - this.state.showRange[0] + 1 // 区间大小
     let start = 0
     let end = 0
@@ -327,7 +412,7 @@ export default class index extends Component {
           left = '0px'
         }
       }
-      let lineShowLabels = labels.slice(start, end)
+      let lineShowLabels = this.labels.slice(start, end)
       indicator.left = left
       indicator.labels = lineShowLabels
       indicators.push(indicator)
@@ -342,7 +427,7 @@ export default class index extends Component {
     let start = this.state.showRange[0]
     let end =  this.state.showRange[1]
     let flag = false
-    let rightNoShowNum = labels.length - 1 - this.state.showRange[1]
+    let rightNoShowNum = this.state.labels.length - 1 - this.state.showRange[1]
     let leftNoShowNum = this.state.showRange[0]
 
     if (change > 0){
@@ -365,9 +450,9 @@ export default class index extends Component {
       let charts = []
       for (let i = 0 ; i < this.state.charts.length ; i++){
         let chart = this.state.charts[i]
-        let new_label = labels.slice(start, end + 1)
+        let new_label = this.state.labels.slice(start, end + 1)
         // 从全局数据中截取
-        let value = values[i]
+        let value = this.state.values[i]
         
         let new_chart = {
           ...chart,
