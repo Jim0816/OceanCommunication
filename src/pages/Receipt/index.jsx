@@ -8,16 +8,9 @@ import Indicator from '../../components/MyCharts/Indicator'
 import Draggable from 'react-draggable'
 import {getData} from '../../utils/test'
 
-const labels = ['2011', '2011', '2012', '2012', '2013', '2013']
-const childLabels = ['1', '1', '2', '2', '3', '3', '4', '4', '5 ', '5', '6', '6']
-const values = [
-  {title: '数据库A', data: [16, 49, 129, 29, 129, 29, 90, 69, 199, 70, 16, 49]},
-  {title: '数据库B', data: [36, 0, 9, 29, 39, 79, 90, 100, 139, 180, 16, 29]},
-  {title: '数据库C', data: [90, 0, 9, 89, 39, 79, 90, 10, 139, 10, 16, 29]}
-]
 
-const showWidth = 1000
-const chartHeight = 150
+const showWidth = 1000 // 坐标轴实际宽度
+const chartHeight = 130
 const colors = ['red', 'black', 'green', 'orange', 'pink', 'yellow', 'blue']
 
 
@@ -27,11 +20,13 @@ const rdom = require('react-dom');
 export default class index extends Component {
 
   state = {
-    labels: [],
-    childLabels: [],
-    values: [],
+    labels: [], // 最初的横坐标集合（一级）
+    sub_labels: [], //最初的横坐标集合（二级）
+    charts: [], // 记录最初上方所有折线图数据,
+    cur_labels: [], // 滑动时的暂时横坐标 
+    cur_sub_labels: [], // 滑动时的暂时横坐标 
+    cur_charts: [], // 滑动时暂时的数据
     indicators: [],
-    charts: [], // 记录上方所有折线图数据
     showRange: [], // 当前展示区间索引
     lineChartWidth: 0, // 折线图坐标区域宽度
     LineChartLeftBorder: 0, // 折线图坐标区域左边界位置
@@ -42,12 +37,27 @@ export default class index extends Component {
 
   constructor(props) {
     super(props)
-    this.init()
    }
 
    componentDidMount() {
     // websocket连接
     this.websocket_conn()
+  
+    //const data = getData()
+    // let labels = data.labels
+    // let sub_labels = data.sub_labels
+    // let charts = data.charts
+
+    // this.setState({
+    //   labels: labels,
+    //   sub_labels: sub_labels,
+    //   charts: charts,
+    //   cur_labels: labels,
+    //   cur_sub_labels: sub_labels,
+    //   cur_charts: charts,
+    //   showRange: [0, labels.length - 1]
+    // })
+
      // 初始化折线图和总览图边界、位置
     // let lineBox = document.getElementById('line-border-box')
     // let lineBoxLeft = lineBox.getBoundingClientRect().left
@@ -61,19 +71,20 @@ export default class index extends Component {
 
   render() {
     // 获取状态数据
-    let {indicators, charts} = this.state
+    let {indicators, showRange,labels, sub_labels, charts, cur_charts, cur_labels, cur_sub_labels} = this.state
+    
     return (
       <div className={receipt.container}>
           <div className={receipt.center} onWheel={(e) => this.handleScroll(e)} >
             {/* 折线图 */}
             <div className={receipt.chartContainer}>
               <div style={{position: 'relative', width: '100%', height: '100%'}}>
-                {charts.map(
+                {cur_charts.map(
                     (chart, index) => {
                         return (
                           <div key={index} id='chartCard' className={receipt.chartCard} style={{height: chartHeight + 'px'}}>
-                            <div onMouseDown={e => {this.moveChart(e)}} id='line-border-box' style={{position: 'relative', width: showWidth + 'px', height: '100%', overflow: 'hidden'}}>
-                              <LineChart title={chart.title} labels={chart.labels} childLabels={chart.childLabels} values={chart.values} height={chartHeight}/>
+                            <div onMouseDown={e => {this.moveChart(e)}} id='line-border-box' style={{position: 'relative', width: (showWidth + 30 * 2) + 'px', height: '100%', overflow: 'hidden'}}>
+                              <LineChart title={chart.title} labels={cur_labels} sub_labels={cur_sub_labels} values={chart.values} height={chartHeight}/>
                             </div>
                           </div>
                         )
@@ -85,13 +96,13 @@ export default class index extends Component {
             
             {/* 时间指示器 竖线 */}
             <div className={receipt.indicatorContainer}>
-              {/*  注意: 5代表指示器宽度 */}
-              <div style={{position: 'relative', top: '60px', width: showWidth + 5 + 'px', height: (chartHeight + 13) * 3 - 60 + 'px'}}>
+              {/*  注意: 10代表指示器宽度 */}
+              <div style={{position: 'relative', top: '45px', width: showWidth + 10 + 'px', height: (chartHeight + 30) * 3 - 40 + 'px'}}>
               <Indicator
-                  labels={this.state.labels}
+                  labels={labels}
                   showWidth={showWidth}
-                  showRange={this.state.showRange}
-                  indicators={this.state.indicators} 
+                  showRange={showRange}
+                  indicators={indicators} 
                   updateIndicators={this.updateIndicators}/>
               </div>
             </div>
@@ -108,11 +119,14 @@ export default class index extends Component {
 
           </div>
           <div className={receipt.bottom}>
-            <div style={{float: 'left', marginLeft: '1%', marginTop: '10px', width: '1100px', height: '70px',}}>
+            {/* 2表示边界宽度 1*2 */}
+            <div style={{float: 'left', marginLeft: '1%', marginTop: '10px', width: showWidth + 'px', height: '70px', display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
               <OverviewBar 
-              showRange={this.state.showRange}
-              indicators={this.state.indicators} 
-              labels={this.state.labels} values={this.state.values} />
+              width={showWidth}
+              height={70}
+              showRange={showRange}
+              indicators={indicators} 
+              labels={labels} sub_labels={sub_labels} charts={charts} />
             </div>
             <div style={{float: 'left', marginLeft: '0.4%', marginTop: '10px', width: '2%', height: '70px', fontSize: '20px', lineHeight: '20px', fontWeight: 'bolder'}}>
               <span onClick={this.addIndicator} style={{float: 'left', marginLeft: '0%', marginTop: '7px', width: '100%', height: '23px', textAlign: 'center', background: 'gray', cursor: 'pointer'}}>+</span>
@@ -184,57 +198,21 @@ export default class index extends Component {
     // 逻辑处理，这里this可以正常获取了
     // 初始化折线图数据
     const data = JSON.parse(msg.data)
-    console.log(data);
-    let labels = data.labels
-    let values = data.values
 
-    var charts = []
-    for (let i = 0 ; i < values.length ; i++){
-      let value = values[i]
-      let chart = {
-        title: value.title,
-        top: (chartHeight * i + 10) + 'px',
-        labels: labels,
-        values: value.data
-      }
-      charts.push(chart)
-    }
+    let labels = data.labels
+    let sub_labels = data.sub_labels
+    let charts = data.charts
 
     this.setState({
       labels: labels,
-      values: values,
+      sub_labels: sub_labels,
       charts: charts,
+      cur_labels: labels,
+      cur_sub_labels: sub_labels,
+      cur_charts: charts,
       showRange: [0, labels.length - 1]
     })
  }
-
-  // 初始化数据
-  init = () => {
-    const data = getData()
-    console.log(data)
-    this.state.labels = data.labels;
-    this.state.childLabels = data.childLabels;
-    this.state.values = data.values;
-    // 初始化折线图数据
-    var charts = []
-    for (let i = 0 ; i < this.state.values.length ; i++){
-      let value = this.state.values[i]
-      let chart = {
-        title: value.title,
-        top: (chartHeight * i + 10) + 'px',
-        labels: this.state.labels,
-        childLabels: this.state.childLabels,
-        values: value.data
-      }
-      charts.push(chart)
-    }
-
-    // 初始化时间指示器
-    // 更新状态数据
-    this.state.charts = charts
-    this.state.lineShowLabels = this.state.labels
-    this.state.showRange = [0, this.state.labels.length -1]
-  }
 
   // 添加时间指示器
   addIndicator = () => {
@@ -305,11 +283,12 @@ export default class index extends Component {
 
   // 子组件更新indicators
   updateIndicators = (indicators) => {
+    //console.log(indicators)
     this.state.indicators = indicators
     this.forceUpdate()
   }
 
-  // 缩放折线图展示范围
+  // 1.1 滑动鼠标滚轮，缩放折线图。 缩放折线图展示范围
   handleScroll = (e) => {
     const ele = rdom.findDOMNode(this);
     if (e.nativeEvent.deltaY <= 0) {
@@ -317,166 +296,45 @@ export default class index extends Component {
       if(ele.scrollTop <= 0) {
         //e.preventDefault();
         // 每滑动一下，区间两边同时减少一个label
-        this.changeLineChartData(-1)
+        this.changeLineChartData(-5)
       }
     } else{
       /* scrolling down 扩大区间 */
       if(ele.scrollTop + ele.clientHeight >= ele.scrollHeight) {
         //e.preventDefault();
-        this.changeLineChartData(1)
+        this.changeLineChartData(5)
       }
     }
   }
 
+  // 1.2 获取缩放折线图的比例
   changeLineChartData = (change) => {
-    let {labels, values} = this.state
-    let size = this.state.showRange[1] - this.state.showRange[0] + 1 // 区间大小
+    let {showRange, labels} = this.state
+    let size = showRange[1] - showRange[0] + 1 // 区间大小
     let start = 0
     let end = 0
     let result = false
     if (change > 0){
       // 扩大区间
-      // if (change <= (labels.length - size) / 2){
-        
-      //   console.log('======= 扩大区间 =========', start ,end)
-      // }
-      start = this.state.showRange[0] - change >= 0 ? this.state.showRange[0] - change : this.state.showRange[0]
-      end = this.state.showRange[1] + change <= labels.length - 1 ? this.state.showRange[1] + change : this.state.showRange[1]
+      start = showRange[0] - change >= 0 ? showRange[0] - change : showRange[0]
+      end = showRange[1] + change <= labels.length - 1 ? showRange[1] + change : showRange[1]
       result = true
     }else {
       // 缩小区间
       if ((-1 * change) < (size / 2)){
-        start = this.state.showRange[0] - change
-        end = this.state.showRange[1] + change
+        start = showRange[0] - change
+        end = showRange[1] + change
         result = true
       }
     }
 
     if (result){
-      let charts = []
-      for (let i = 0 ; i < this.state.charts.length ; i++){
-        let chart = this.state.charts[i]
-        let new_label = labels.slice(start, end + 1)
-        // 从全局数据中截取
-        let value = values[i]
-        
-        let new_chart = {
-          ...chart,
-          labels: new_label,
-          values: value.data.slice(start, end + 1)
-        }
-        charts.push(new_chart)
-      }
-
-      // 鼠标滚动完，打印当前指示器位置
-      let indicators = this.adjustIndicator(start, end)
-      //console.log(indicators)
-      //this.state.indicators = indicators
-
-      this.setState({
-        charts: charts,
-        indicators: indicators,
-        showRange: [start, end]
-      }, () => {
-        
-      })
-
+      this.changeRange(start, end)
     }
 
   }
 
-  adjustIndicator = (start, end) => {
-    // 只需要调整折线图层中指示器的位置，全局位置不变
-    // let indicator = {id: indicators.length, color: color, left: '50%', labelLocation: index, main: true, labels: this.state.lineShowLabels}
-    var indicators = []
-    for (let i = 0 ; i < this.state.indicators.length ; i++){
-      let indicator = this.state.indicators[i]
-      let left = '0px'
-      console.log(start, end, indicator.labelLocation)
-      if (indicator.labelLocation >=  start && indicator.labelLocation <= end){
-        // 在展示区域
-        console.log(' === 中间 ===')
-        let itemWidth = showWidth / (end - start)
-        //new_indicator.left =(indicator.labelLocation - start) * itemWidth + 'px'
-        left = (indicator.labelLocation - start) * itemWidth + 'px'
-        console.log(left)
-      }else{
-        // 不在展示区域，靠边停放
-        if (indicator.labelLocation > end){
-          // 靠右边
-          console.log(' === 右边 ===')
-          left =  showWidth + 'px'
-        }else if (indicator.labelLocation < start){
-          // 靠左边
-          console.log(' === 左边 ===')
-          left = '0px'
-        }
-      }
-      let lineShowLabels = this.labels.slice(start, end)
-      indicator.left = left
-      indicator.labels = lineShowLabels
-      indicators.push(indicator)
-    }
-    
-    return indicators
-  }
-
-  // 这里的change是整数 带方向
-  moveRange = (change) => {
-    let {indicators} = this.state
-    let start = this.state.showRange[0]
-    let end =  this.state.showRange[1]
-    let flag = false
-    let rightNoShowNum = this.state.labels.length - 1 - this.state.showRange[1]
-    let leftNoShowNum = this.state.showRange[0]
-
-    if (change > 0){
-      // 向右边滑动
-      if (change <= leftNoShowNum){
-        start -= change
-        end -= change
-        flag = true
-      }
-    }else if (change < 0){
-      // 向左边滑动
-      if (-change <= rightNoShowNum){
-        start += -change
-        end += -change
-        flag = true
-      }
-    }
-
-    if (flag){
-      let charts = []
-      for (let i = 0 ; i < this.state.charts.length ; i++){
-        let chart = this.state.charts[i]
-        let new_label = this.state.labels.slice(start, end + 1)
-        // 从全局数据中截取
-        let value = this.state.values[i]
-        
-        let new_chart = {
-          ...chart,
-          labels: new_label,
-          values: value.data.slice(start, end + 1)
-        }
-        charts.push(new_chart)
-      }
-
-      let indicators = this.adjustIndicator(start, end)
-      //console.log(indicators)
-      //this.state.indicators = indicators
-
-      this.setState({
-        charts: charts,
-        showRange: [start, end],
-        indicators: indicators
-      }, () => {
-        
-      })
-    }
-    return [start, end]
-  }
-
+  // 2.1 响应折线图左右移动事件
   moveChart = (e) => {
     let { moveRange} = this
     let {showRange} = this.state
@@ -500,10 +358,6 @@ export default class index extends Component {
         moveRange(change)
         pre_change = change
       }
-      
-      //let range = moveRange(change)
-      //start = range[0]
-      //end = range[1]
     };
     /*鼠标的抬起事件,终止拖动*/
     document.onmouseup = function () {
@@ -520,6 +374,110 @@ export default class index extends Component {
     };
 
   }
+
+  // 2.2 计算移动后展示的区间索引 这里的change是整数 带方向
+  moveRange = (change) => {
+    let {indicators, showRange, labels} = this.state
+    let start = showRange[0]
+    let end =  showRange[1]
+    let flag = false
+    let rightNoShowNum = labels.length - 1 - showRange[1]
+    let leftNoShowNum = showRange[0]
+
+    if (change > 0){
+      // 向右边滑动
+      if (change <= leftNoShowNum){
+        start -= change
+        end -= change
+        flag = true
+      }
+    }else if (change < 0){
+      // 向左边滑动
+      if (-change <= rightNoShowNum){
+        start += -change
+        end += -change
+        flag = true
+      }
+    }
+
+    if (flag){
+      this.changeRange(start, end)
+    }
+  }
+
+  // 根据区间展示范围更新展示效果
+  changeRange = (start, end) => {
+    let {labels, sub_labels, charts} = this.state
+    let new_charts = []
+    for (let i = 0 ; i < charts.length ; i++){
+      let chart = JSON.parse(JSON.stringify(charts[i]))
+      // 从全局数据中截取
+      let values_in_new_chart = []
+      for (let j = 0 ; j < chart.values.length ; j++) {
+        values_in_new_chart.push({"name": chart.values[j].name, "value": chart.values[j].value.slice(start, end + 1)})
+      }
+      let new_chart = {
+        "title": chart.title,
+        values: values_in_new_chart
+      }
+      new_charts.push(new_chart)
+    }
+
+    // 鼠标滚动完，打印当前指示器位置
+    let indicators = this.adjustIndicator(start, end)
+
+    //console.log(indicators)
+    //this.state.indicators = indicators
+    this.setState({
+      cur_charts: new_charts,
+      indicators: indicators,
+      cur_labels: labels.slice(start, end + 1),
+      cur_sub_labels: sub_labels.slice(start, end + 1),
+      showRange: [start, end]
+    }, () => {
+      
+    })
+
+  }
+
+  // 由于缩放、滑动展示区域，导致指示器位置需要变化
+  adjustIndicator = (start, end) => {
+    let {labels, indicators} = this.state
+    var new_indicators = []
+    for (let i = 0 ; i < indicators.length ; i++) {
+      let indicator = JSON.parse(JSON.stringify(indicators[i]))
+      let left = '0px'
+      if (indicator.labelLocation >=  start && indicator.labelLocation <= end){
+        // 在展示范围内
+        let itemWidth = showWidth / (end - start)
+        left = (indicator.labelLocation - start) * itemWidth + 'px'
+      }else{
+        // 超出展示范围
+        if (indicator.labelLocation > end){
+          // 靠右边
+          left =  showWidth + 'px'
+        }else if (indicator.labelLocation < start){
+          // 靠左边
+          left = '0px'
+        }
+      }
+     
+      new_indicators.push({
+        "id": indicator.id,
+        "color": indicator.color,
+        "labelLocation": indicator.labelLocation,
+        "labels": labels.slice(start, end + 1),
+        "left": left,
+        "main": indicator.main
+      })
+    }
+    
+    return new_indicators
+  }
+
+  
+
+  
 
 
 }

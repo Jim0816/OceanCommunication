@@ -26,7 +26,7 @@ export default class index extends Component {
 
   render() {
     // 获取状态数据
-    let {showRange, indicators, labels, values} = this.props
+    let {showRange, indicators, labels, sub_labels, charts, width, height} = this.props
     let {overviewBarWidth, overviewBarLeftBorder} = this.state
     // 计算下方透明部分区域
     let overviewObj = document.getElementById('overview-container')
@@ -34,10 +34,17 @@ export default class index extends Component {
     let showWidth = ((showRange[1] - showRange[0]) / (labels.length - 1)) * 100 + '%'
     return (
       <div id="overview-container" className={OverviewBar.container}>
-        <LineArea style={{width: '1000px', height: '100%'}} labels={labels} values={values}/>
-          <div className={OverviewBar.showArea} style={{left: showLeft, width: showWidth}}></div>
+        <div className={OverviewBar.chartBox}>
+          <LineArea width={width} labels={labels} sub_labels={sub_labels} charts={charts}/>
+        </div>
+        
+          {/* 阴影面积 */}
+          <div className={OverviewBar.showAreaBox}>
+            <div className={OverviewBar.showArea} style={{left: showLeft, width: showWidth}}></div>
+          </div>
+          
           {indicators.map(
-            (indicator) => {
+            (indicator, id) => {
               // indicator.labelLocation 表示全局数据中横坐标索引
                 let index = Math.trunc(indicator.labelLocation / 1)
                 // 位于当前区间的百分之多少位置
@@ -46,7 +53,7 @@ export default class index extends Component {
                 let itemWidth = overviewBarWidth / (labels.length - 1)
                 let left = itemWidth * (index + decimal) + 'px'
                 return (
-                  <div className={OverviewBar.indicator} style={{left: left, backgroundColor: indicator.color}}></div>
+                  <div key={id} className={OverviewBar.indicator} style={{left: left, backgroundColor: indicator.color}}></div>
                 )
             }
           )}

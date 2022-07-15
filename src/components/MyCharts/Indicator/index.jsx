@@ -26,6 +26,7 @@ export default class index extends Component {
     /*用于保存小的div拖拽前的坐标*/
     osmall.startX = e.clientX - osmall.offsetLeft;
     osmall.startY = e.clientY - osmall.offsetTop;
+
     /*鼠标的移动事件*/
     document.onmousemove = function (e) {
         var e = e || window.event;

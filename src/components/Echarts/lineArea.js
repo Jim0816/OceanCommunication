@@ -17,52 +17,69 @@ import ReactEcharts from 'echarts-for-react';
 
 export default class LineArea extends React.Component{
     
-  state = {
-    option: {}
-  }
-
-  constructor(props) {
-    super(props)
-    this.state.option = this.getOption()
-  }
-  
     render(){
+      const {labels, sub_labels, charts} = this.props
+      const option = this.getOption()
       return(
-        <div>
+        <div style={{width: this.props.width + 'px', height: '100%'}}>
           <div>
-              <ReactEcharts option={this.state.option} theme="Imooc"  style={{width: '1100px', height:'100%'}}/>
+            <ReactEcharts option={option} theme="Imooc"  style={{width: this.props.width + 'px', height:'100%'}}/>
           </div>
+          
         </div>
       )
     }
 
     // 自定义方法
     getOption =()=> {
-      const {labels, values} = this.props
+      const {labels, sub_labels, charts} = this.props
+      //console.log('孙子组件渲染...', labels)
       var newSeries = []
-      for (let i = 0 ; i < values.length ; i++){
-        let item = {
-          data: values[i].data,
-          type: 'line',
-          areaStyle: {}
+      for (let i = 0 ; i < charts.length && i < 1 ; i++){
+        // 每一个折线图数据
+        let chart = charts[i]
+        let list = chart.values
+        for (let j = 0 ; j < list.length ; j++) {
+          let item = {
+            data: list[j].value,
+            type: 'line',
+            itemStyle : {  
+              normal : {
+                  color: j == 0 ?'red' : 'green',  
+                  lineStyle:{  
+                      color: j == 0 ?'red' : 'green'
+                  }  
+              }  
+          },  
+          }
+          newSeries.push(item)
         }
-        newSeries.push(item)
       }
 
+
       let option = {
-          xAxis: {
-            type: 'category',
-            boundaryGap: false,
-            data: labels
-          },
+          xAxis: [
+            {
+              type: 'category',
+              position: 'bottom',
+              boundaryGap: false,
+              data: labels
+            },
+            {
+              type: 'category',
+              position: 'top',
+              boundaryGap: false,
+              data: sub_labels
+            }
+          ],
           yAxis: {
             type: 'value'
           },
           grid: {
-              top: '0%',
+              top: '22%',
               left: '0%',
               right: '0%',
-              bottom: '40%'
+              bottom: '50%'
           },
           series: newSeries
         };

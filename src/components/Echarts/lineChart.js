@@ -19,7 +19,9 @@ import { string } from 'prop-types';
 export default class LineChart extends React.Component{
 
     getOption = () => {
-        const {title, labels, childLabels, values} = this.props
+        const {title, labels, sub_labels, values} = this.props
+        //console.log(labels)
+        //console.log(sub_labels)
         let option = {
             // Make gradient line here
             visualMap: [
@@ -44,9 +46,14 @@ export default class LineChart extends React.Component{
             tooltip: {
               trigger: 'axis'
             },
+            legend: {
+              data: [values[0].name, values[1].name],
+              right: '5%'
+            },
             xAxis: [
               {
                 type: 'category',
+                position: 'bottom',
                 boundaryGap: false,
                 data: labels
               },
@@ -54,21 +61,44 @@ export default class LineChart extends React.Component{
                 type: 'category',
                 position: 'top',
                 boundaryGap: false,
-                data: childLabels
+                data: sub_labels
               }
             ],
             yAxis: {type: 'value'},
             grid: {
                 top: '30%',
-                left: '0%',
-                right: '0%',
+                left: '30px',
+                right: '30px',
                 bottom: '15%'
             },
             series: [
               {
                 type: 'line',
                 showSymbol: false,
-                data: values
+                name: values[0].name,
+                data: values[0].value,
+                itemStyle : {  
+                    normal : {
+                        color:'red',  
+                        lineStyle:{  
+                            color:'red'  
+                        }  
+                    }  
+                },  
+              },
+              {
+                type: 'line',
+                showSymbol: false,
+                name: values[1].name,
+                data: values[1].value,
+                itemStyle : {  
+                  normal : {
+                      color:'green',  
+                      lineStyle:{  
+                          color:'green'  
+                      }  
+                  }  
+              },  
               }
             ]
           };
@@ -80,7 +110,7 @@ export default class LineChart extends React.Component{
       let chartHeight = height + 'px'
       return(
         <div>
-          <div style={{width: '100%', height: chartHeight }}>
+          <div style={{width: '100%', height: chartHeight}}>
               <ReactEcharts option={this.getOption()} theme="Imooc"  style={{width: '100%', height:'100%'}}/>
           </div>
         </div>
