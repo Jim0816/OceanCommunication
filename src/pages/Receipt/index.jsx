@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Button, Tooltip } from 'antd';
+import { message } from 'antd';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
 import receipt from './index.module.css'
 import LineChart from '../../components/Echarts/lineChart'
@@ -13,13 +13,14 @@ const showWidth = 1000 // 坐标轴实际宽度
 const chartHeight = 130
 const colors = ['red', 'black', 'green', 'orange', 'pink', 'yellow', 'blue']
 
-
-
 const rdom = require('react-dom');
 
 export default class index extends Component {
 
   state = {
+    websocket: null,
+    //heart_count: 0, // 数据刷新心跳
+    //re_conn_count: 0, // 重复连接次数
     labels: [], // 最初的横坐标集合（一级）
     sub_labels: [], //最初的横坐标集合（二级）
     charts: [], // 记录最初上方所有折线图数据,
@@ -28,6 +29,7 @@ export default class index extends Component {
     cur_charts: [], // 滑动时暂时的数据
     indicators: [],
     showRange: [], // 当前展示区间索引
+    dataNum: 1024, // 单位时间产生的数据量
     lineChartWidth: 0, // 折线图坐标区域宽度
     LineChartLeftBorder: 0, // 折线图坐标区域左边界位置
     indicatorXBeforeMove: '0px', // 指示器移动前位置
@@ -40,34 +42,31 @@ export default class index extends Component {
    }
 
    componentDidMount() {
+    //let {heart_count, re_conn_count} = this.state
     // websocket连接
     this.websocket_conn()
-  
-    //const data = getData()
-    // let labels = data.labels
-    // let sub_labels = data.sub_labels
-    // let charts = data.charts
 
-    // this.setState({
-    //   labels: labels,
-    //   sub_labels: sub_labels,
-    //   charts: charts,
-    //   cur_labels: labels,
-    //   cur_sub_labels: sub_labels,
-    //   cur_charts: charts,
-    //   showRange: [0, labels.length - 1]
-    // })
+    // 定时判断websocket数据是否异常
+    //this.interval = setInterval(() => {this.watch_connection()},5000);
 
-     // 初始化折线图和总览图边界、位置
-    // let lineBox = document.getElementById('line-border-box')
-    // let lineBoxLeft = lineBox.getBoundingClientRect().left
-    // let lineBoxWidth = lineBox.offsetWidth
-
-    // 注意：通过setState() 形式修改状态会触发render() 
-    // this.state.lineChartWidth = lineBoxWidth
-    // this.state.LineChartLeftBorder = lineBoxLeft
-    
    }
+
+  //  watch_connection = () => {
+  //   let {heart_count, re_conn_count} = this.state
+  //   console.log('数据更新心跳: ', heart_count)
+  //     if (heart_count > 0) {
+  //       // 数据接收正常,重新记录
+  //       this.state.heart_count = 0
+  //       this.state.re_conn_count = 0
+  //     }else{
+  //       // 数据接收异常, 重新连接
+  //       if (re_conn_count < 3){
+  //         console.log('正在重新连接.....,已经连接次数: ', re_conn_count + 1)
+  //         this.websocket_conn()
+  //         this.state.re_conn_count = re_conn_count + 1
+  //       }
+  //     }
+  //  }
 
   render() {
     // 获取状态数据
@@ -118,7 +117,7 @@ export default class index extends Component {
             </div> */}
 
           </div>
-          <div className={receipt.bottom}>
+          <div className={receipt.bottom} style={{display: labels.length == 0 ? 'none' : 'flex'}}>
             {/* 2表示边界宽度 1*2 */}
             <div style={{float: 'left', marginLeft: '1%', marginTop: '10px', width: showWidth + 'px', height: '70px', display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
               <OverviewBar 
@@ -177,40 +176,133 @@ export default class index extends Component {
     }
 
     let websocket  = new WebSocket("ws://localhost:8090");
+
     //打开事件
-    websocket.onopen = function () {
-      console.log("websocket已打开");
-    }
-    //发现消息进入
+    websocket.onopen = this.open
+
+    //发现消息进入ß
     websocket.onmessage = this.message
     //关闭事件
-    websocket.onclose = function() {
-      console.log("websocket已关闭");
-    };
+    websocket.onclose = this.close
     //发生了错误事件
     websocket.onerror = function() {
       console.log("websocket发生了错误");
+      message.error('websocket连接失败，请重试!')
     }
   }
 
+  open = (e) => {
+    console.log("websocket连接成功");
+    let websocket = e.currentTarget
+    this.state.websocket = websocket
+    websocket.send("200")
+  }
+
+  close = (e) => {
+    console.log("websocket已关闭", e.code, e.reason);
+    message.error('websocket连接已关闭!')
+    //this.websocket_conn()
+  }
+
   message = (msg) => {
-    console.log("websocket有数据");
+    let {showRange, dataNum, websocket} = this.state
+    //console.log("websocket有数据",websocket);
+    // 回复收到
+    websocket.send("201")
+    //this.state.heart_count = heart_count + 1// 数据接收心跳
     // 逻辑处理，这里this可以正常获取了
     // 初始化折线图数据
     const data = JSON.parse(msg.data)
-
     let labels = data.labels
     let sub_labels = data.sub_labels
     let charts = data.charts
+
+    let cur_labels = []
+    let cur_sub_labels = []
+    let cur_charts = []
+    let cur_range = []
+    let cur_indicators = []
+
+    if (showRange.length == 0){
+      // 第一次接收数据
+      cur_labels = labels
+      cur_sub_labels = sub_labels
+      cur_charts = charts
+      cur_range = [0, labels.length - 1]
+    }else {
+      // 之前已经接收过数据, 区间已经设置好了
+      let start_offset = showRange[0] - (this.state.labels.length / dataNum - 1) * dataNum // 计算上一次的起点偏移
+      let start = Math.floor((labels.length / dataNum - 1) * dataNum + start_offset) // 向上取整
+      let end = start + (showRange[1] - showRange[0]) // [start, end]
+      cur_labels = labels.slice(start, end + 1)
+      cur_sub_labels = sub_labels.slice(start, end + 1)
+
+      // 更新折线图
+      let new_charts = []
+      for (let i = 0 ; i < charts.length ; i++){
+        let chart = JSON.parse(JSON.stringify(charts[i]))
+        // 从全局数据中截取
+        let values_in_new_chart = []
+        for (let j = 0 ; j < chart.values.length ; j++) {
+          values_in_new_chart.push({"name": chart.values[j].name, "value": chart.values[j].value.slice(start, end + 1)})
+        }
+        let new_chart = {
+          "title": chart.title,
+          values: values_in_new_chart
+        }
+        new_charts.push(new_chart)
+      }
+      cur_charts = new_charts
+      cur_range = [start, end]
+
+      // 更新指示器位置
+      let old_indicators = this.state.indicators
+      for (let i = 0 ; i < old_indicators.length ; i++){
+        let indicator = JSON.parse(JSON.stringify(old_indicators[i]))
+        let left = '0px'
+        //console.log(start, end, labelLocation)
+        let labelLocation = (labels.length / dataNum - 1) * dataNum + indicator.labelLocation
+        if (labelLocation >=  start && labelLocation <= end){
+          // 在展示范围内
+          let itemWidth = showWidth / (end - start)
+          left = (labelLocation - start) * itemWidth + 'px'
+        }else{
+          // 超出展示范围
+          if (labelLocation > end){
+            // 靠右边
+            left =  showWidth + 'px'
+          }else if (labelLocation < start){
+            // 靠左边
+            left = '0px'
+          }
+        }
+      
+        cur_indicators.push({
+          "id": indicator.id,
+          "color": indicator.color,
+          "labelLocation": labelLocation,
+          "labels": labels.slice(start, end + 1),
+          "left": left,
+          "main": indicator.main
+        })
+      }
+
+      
+    }
+    console.log('数量:', labels.length)
+    console.log(cur_range)
+    //console.log(cur_labels)
+    
 
     this.setState({
       labels: labels,
       sub_labels: sub_labels,
       charts: charts,
-      cur_labels: labels,
-      cur_sub_labels: sub_labels,
-      cur_charts: charts,
-      showRange: [0, labels.length - 1]
+      cur_labels: cur_labels,
+      cur_sub_labels: cur_sub_labels,
+      cur_charts: cur_charts,
+      indicators: cur_indicators,
+      showRange: cur_range
     })
  }
 
